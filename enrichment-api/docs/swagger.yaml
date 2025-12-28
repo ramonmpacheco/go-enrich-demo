@@ -1,0 +1,75 @@
+basePath: /
+definitions:
+  models.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      number:
+        type: string
+      state:
+        type: string
+      street:
+        type: string
+    type: object
+  models.EnrichmentRequest:
+    properties:
+      customer_code:
+        type: string
+    type: object
+  models.EnrichmentResponse:
+    properties:
+      address:
+        $ref: '#/definitions/models.Address'
+      pii:
+        $ref: '#/definitions/models.Pii'
+      suggestions:
+        items:
+          $ref: '#/definitions/models.Suggestion'
+        type: array
+    type: object
+  models.Pii:
+    properties:
+      cpf:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  models.Suggestion:
+    properties:
+      name:
+        type: string
+      promotion:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample enrichment service.
+  title: Enrichment API
+  version: "1.0"
+paths:
+  /enrichment:
+    post:
+      consumes:
+      - application/json
+      description: Get address, pii and suggestions for a customer
+      parameters:
+      - description: Customer Code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.EnrichmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.EnrichmentResponse'
+      summary: Enrich customer data
+swagger: "2.0"
