@@ -3,12 +3,12 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
 func TestHandleEnrichment_BadRequest(t *testing.T) {
-	req, err := http.NewRequest("POST", "/enrichment", strings.NewReader("invalid-json"))
+	// Test missing customer_code
+	req, err := http.NewRequest("GET", "/enrichment", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

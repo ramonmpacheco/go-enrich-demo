@@ -10,7 +10,3 @@ type EnrichmentResponse struct {
 type Metadata struct {
 	ProcessingTime string `json:"processing_time"`
 }
-
-type EnrichmentRequest struct {
-	CustomerCode string `json:"customer_code"`
-}

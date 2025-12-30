@@ -31,7 +31,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Post("/suggestions", getSuggestions)
+	r.Get("/suggestions", getSuggestions)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -42,13 +42,13 @@ func main() {
 }
 
 func getSuggestions(w http.ResponseWriter, r *http.Request) {
-	var req models.SuggestionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	customerCode := r.URL.Query().Get("customer_code")
+	if customerCode == "" {
+		http.Error(w, "customer_code is required", http.StatusBadRequest)
 		return
 	}
 
-	rows, err := db.Query("SELECT restaurant_name, promotion_description FROM suggestions WHERE customer_code = $1", req.CustomerCode)
+	rows, err := db.Query("SELECT restaurant_name, promotion_description FROM suggestions WHERE customer_code = $1", customerCode)
 	if err != nil {
 		log.Printf("Error querying DB: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

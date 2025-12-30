@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.UUID
@@ -33,13 +33,11 @@ data class Pii(
 @Repository
 interface PiiRepository : JpaRepository<Pii, UUID>
 
-data class PiiRequest(@param:JsonProperty("customer_code") val customerCode: UUID)
-
 @RestController
 class PiiController(val repository: PiiRepository) {
 
-    @PostMapping("/pii")
-    fun getPii(@RequestBody request: PiiRequest): Pii? {
-        return repository.findById(request.customerCode).orElse(null)
+    @GetMapping("/pii")
+    fun getPii(@RequestParam("customer_code") customerCode: UUID): Pii? {
+        return repository.findById(customerCode).orElse(null)
     }
 }

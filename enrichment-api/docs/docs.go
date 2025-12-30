@@ -16,7 +16,7 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/enrichment": {
-            "post": {
+            "get": {
                 "description": "Get address, pii and suggestions for a customer",
                 "consumes": [
                     "application/json"
@@ -27,13 +27,11 @@ const docTemplate = `{
                 "summary": "Enrich customer data",
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "Customer Code",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.EnrichmentRequest"
-                        }
+                        "name": "customer_code",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -68,19 +66,14 @@ const docTemplate = `{
                 }
             }
         },
-        "models.EnrichmentRequest": {
-            "type": "object",
-            "properties": {
-                "customer_code": {
-                    "type": "string"
-                }
-            }
-        },
         "models.EnrichmentResponse": {
             "type": "object",
             "properties": {
                 "address": {
                     "$ref": "#/definitions/models.Address"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/models.Metadata"
                 },
                 "pii": {
                     "$ref": "#/definitions/models.Pii"
@@ -90,6 +83,14 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/models.Suggestion"
                     }
+                }
+            }
+        },
+        "models.Metadata": {
+            "type": "object",
+            "properties": {
+                "processing_time": {
+                    "type": "string"
                 }
             }
         },

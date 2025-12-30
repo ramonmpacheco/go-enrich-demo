@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -42,7 +41,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Post("/enrichment", handleEnrichment)
+	r.Get("/enrichment", handleEnrichment)
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	port := os.Getenv("PORT")
@@ -58,14 +57,14 @@ func main() {
 // @Description Get address, pii and suggestions for a customer
 // @Accept  json
 // @Produce  json
-// @Param request body models.EnrichmentRequest true "Customer Code"
+// @Param customer_code query string true "Customer Code"
 // @Success 200 {object} models.EnrichmentResponse
-// @Router /enrichment [post]
+// @Router /enrichment [get]
 func handleEnrichment(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
-	var req models.EnrichmentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	customerCode := r.URL.Query().Get("customer_code")
+	if customerCode == "" {
+		http.Error(w, "customer_code is required", http.StatusBadRequest)
 		return
 	}
 
@@ -78,7 +77,7 @@ func handleEnrichment(w http.ResponseWriter, r *http.Request) {
 	// 1. Get Address from DB
 	go func() {
 		defer wg.Done()
-		addr, err := getAddress(req.CustomerCode)
+		addr, err := getAddress(customerCode)
 		if err != nil {
 			log.Printf("Error getting address: %v", err)
 			// Fallback: leave as nil
@@ -90,7 +89,7 @@ func handleEnrichment(w http.ResponseWriter, r *http.Request) {
 	// 2. Get PII from pii-api
 	go func() {
 		defer wg.Done()
-		piiData, err := getPii(req.CustomerCode)
+		piiData, err := getPii(customerCode)
 		if err != nil {
 			log.Printf("Error getting PII: %v", err)
 			return
@@ -101,7 +100,7 @@ func handleEnrichment(w http.ResponseWriter, r *http.Request) {
 	// 3. Get Suggestions from suggestion-api
 	go func() {
 		defer wg.Done()
-		suggestions, err := getSuggestions(req.CustomerCode)
+		suggestions, err := getSuggestions(customerCode)
 		if err != nil {
 			log.Printf("Error getting suggestions: %v", err)
 			resp.Suggestions = []models.Suggestion{} // Ensure empty array not nil
@@ -153,11 +152,8 @@ func getPii(customerCode string) (*models.Pii, error) {
 		Timeout: 2 * time.Second, // Timeout requirement
 	}
 
-	payload := map[string]string{"customer_code": customerCode}
-	body, _ := json.Marshal(payload)
-
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	reqUrl := fmt.Sprintf("%s?customer_code=%s", url, customerCode)
+	req, _ := http.NewRequest("GET", reqUrl, nil)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -189,11 +185,8 @@ func getSuggestions(customerCode string) ([]models.Suggestion, error) {
 		Timeout: 2 * time.Second,
 	}
 
-	payload := map[string]string{"customer_code": customerCode}
-	body, _ := json.Marshal(payload)
-
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	reqUrl := fmt.Sprintf("%s?customer_code=%s", url, customerCode)
+	req, _ := http.NewRequest("GET", reqUrl, nil)
 
 	res, err := client.Do(req)
 	if err != nil {

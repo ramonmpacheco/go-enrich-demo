@@ -13,21 +13,23 @@ definitions:
       street:
         type: string
     type: object
-  models.EnrichmentRequest:
-    properties:
-      customer_code:
-        type: string
-    type: object
   models.EnrichmentResponse:
     properties:
       address:
         $ref: '#/definitions/models.Address'
+      metadata:
+        $ref: '#/definitions/models.Metadata'
       pii:
         $ref: '#/definitions/models.Pii'
       suggestions:
         items:
           $ref: '#/definitions/models.Suggestion'
         type: array
+    type: object
+  models.Metadata:
+    properties:
+      processing_time:
+        type: string
     type: object
   models.Pii:
     properties:
@@ -53,17 +55,16 @@ info:
   version: "1.0"
 paths:
   /enrichment:
-    post:
+    get:
       consumes:
       - application/json
       description: Get address, pii and suggestions for a customer
       parameters:
       - description: Customer Code
-        in: body
-        name: request
+        in: query
+        name: customer_code
         required: true
-        schema:
-          $ref: '#/definitions/models.EnrichmentRequest'
+        type: string
       produces:
       - application/json
       responses:
